@@ -1,103 +1,202 @@
-# Deploying DeployHub to Fly.io
+# Deploying DeployHub (Full Production)
+
+This guide deploys DeployHub with **full functionality** including building and deploying user projects.
 
 ## Prerequisites
 
-1. Install Fly CLI:
-```bash
-brew install flyctl
-```
+- A VPS with **Ubuntu 22.04+** (DigitalOcean, Hetzner, Linode, etc.)
+- Minimum: 1 vCPU, 1GB RAM, 25GB disk (~$5-6/month)
+- Optional: A domain name
 
-2. Login to Fly:
-```bash
-fly auth login
-```
+## Option 1: Quick Setup (Recommended)
 
-## Deployment Steps
+### 1. Create a VPS
 
-### 1. Create Fly App
+**DigitalOcean** (recommended):
+1. Go to [digitalocean.com](https://digitalocean.com)
+2. Create Droplet → Ubuntu 22.04 → Basic → $6/mo
+3. Copy your droplet's IP address
 
-```bash
-cd /Users/mac/Downloads/deployhub
-fly launch --no-deploy
-```
+**Hetzner** (cheapest):
+1. Go to [hetzner.com/cloud](https://hetzner.com/cloud)
+2. Create Server → Ubuntu 22.04 → CX11 → €3.79/mo
 
-When prompted:
-- Choose a unique app name (e.g., `deployhub-yourname`)
-- Select your region (e.g., `lhr` for London)
-- Skip PostgreSQL and Redis
-
-### 2. Create Persistent Volume (for SQLite)
+### 2. Upload DeployHub to Server
 
 ```bash
-fly volumes create deployhub_data --size 1 --region lhr
+# From your local machine
+scp -r /Users/mac/Downloads/deployhub root@YOUR_SERVER_IP:/opt/
 ```
 
-### 3. Set Environment Variables
+### 3. SSH and Run Setup
 
 ```bash
-fly secrets set JWT_SECRET="your-super-secret-jwt-key-change-this"
+# SSH into server
+ssh root@YOUR_SERVER_IP
+
+# Go to deployhub directory
+cd /opt/deployhub
+
+# Make setup script executable
+chmod +x setup-vps.sh
+
+# Run setup (will install everything)
+./setup-vps.sh
 ```
 
-### 4. Deploy
+The script will:
+- Install Docker & Docker Compose
+- Generate a secure JWT secret
+- Build and start DeployHub
+- Optionally configure SSL
+
+### 4. Access DeployHub
+
+Open in browser: `http://YOUR_SERVER_IP`
+
+---
+
+## Option 2: Manual Setup
+
+### 1. Install Docker
 
 ```bash
-fly deploy
+curl -fsSL https://get.docker.com | sh
+systemctl enable docker
 ```
 
-### 5. Open Your App
+### 2. Clone/Upload DeployHub
 
 ```bash
-fly open
+mkdir -p /opt/deployhub
+cd /opt/deployhub
+# Upload your files here
 ```
 
-## Important Notes
-
-⚠️ **Docker-in-Docker Limitation**: The deployment feature that builds and runs user projects **will not work on Fly.io** because it requires Docker socket access. However:
-
-✅ **What works on Fly.io:**
-- User authentication (login/register)
-- Dashboard UI
-- Project management (CRUD)
-- **IaC Visualizer** (Terraform/CloudFormation parsing)
-- Waitlist signup
-- All UI and API endpoints
-
-❌ **What won't work:**
-- Actual project builds/deployments (requires Docker)
-
-This is perfect for a **portfolio demo** - you can showcase the full UI, IaC Visualizer, and explain that actual deployments require a Docker-enabled environment.
-
-## Custom Domain (Optional)
+### 3. Create Environment File
 
 ```bash
-fly certs add your-domain.com
+echo "JWT_SECRET=$(openssl rand -hex 32)" > .env
 ```
 
-Then add a CNAME record pointing to `deployhub-yourname.fly.dev`
+### 4. Start with Docker Compose
 
-## Monitoring
+```bash
+docker-compose up -d --build
+```
+
+---
+
+## Adding SSL (HTTPS)
+
+### With a Domain
+
+1. Point your domain to the server IP (A record)
+
+2. Get SSL certificate:
+```bash
+docker-compose run --rm certbot certonly --webroot \
+    --webroot-path /var/www/certbot \
+    --email your@email.com \
+    --agree-tos \
+    -d your-domain.com
+```
+
+3. Update `nginx.conf`:
+   - Replace `your-domain.com` with your domain
+   - Uncomment the HTTPS server block
+   - Enable HTTP→HTTPS redirect
+
+4. Restart nginx:
+```bash
+docker-compose restart nginx
+```
+
+---
+
+## Useful Commands
 
 ```bash
 # View logs
-fly logs
+docker-compose logs -f
 
-# SSH into container
-fly ssh console
+# View specific service logs
+docker-compose logs -f deployhub
 
-# Check status
-fly status
+# Restart services
+docker-compose restart
+
+# Stop everything
+docker-compose down
+
+# Update DeployHub
+git pull
+docker-compose up -d --build
+
+# Check running containers
+docker ps
 ```
+
+---
+
+## Firewall Setup (Optional but Recommended)
+
+```bash
+ufw allow 22     # SSH
+ufw allow 80     # HTTP
+ufw allow 443    # HTTPS
+ufw enable
+```
+
+---
+
+## What Works
+
+✅ User authentication (register/login)
+✅ Dashboard & project management
+✅ **Building & deploying user projects** (Docker)
+✅ Deployment logs
+✅ Environment variables
+✅ IaC Visualizer (Terraform/CloudFormation)
+✅ Waitlist signup
+✅ SSL/HTTPS support
+
+---
 
 ## Troubleshooting
 
-If build fails, check:
-1. `fly logs` for errors
-2. Ensure volume is created in the same region
-3. Verify JWT_SECRET is set
-
-## Updating
-
-To redeploy after changes:
+### Build fails with "Docker socket" error
 ```bash
-fly deploy
+# Ensure Docker socket is accessible
+ls -la /var/run/docker.sock
+chmod 666 /var/run/docker.sock
 ```
+
+### Container not starting
+```bash
+docker-compose logs deployhub
+```
+
+### Port already in use
+```bash
+lsof -i :3001
+kill -9 <PID>
+```
+
+### SSL certificate issues
+```bash
+# Check certificate status
+docker-compose run --rm certbot certificates
+
+# Force renew
+docker-compose run --rm certbot renew --force-renewal
+```
+
+---
+
+## Scaling (Future)
+
+For handling more users/deployments:
+- Upgrade VPS (more RAM/CPU)
+- Use external PostgreSQL instead of SQLite
+- Add container orchestration (Docker Swarm/K8s)
