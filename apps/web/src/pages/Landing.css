@@ -1,0 +1,567 @@
+.landing {
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Navbar */
+.landing-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 3rem;
+    position: relative;
+    z-index: 10;
+}
+
+.landing-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--color-text);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.landing-logo svg {
+    color: var(--color-primary);
+}
+
+.landing-nav-links {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Hero */
+.hero {
+    position: relative;
+    text-align: center;
+    padding: 4rem 2rem 6rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.hero-glow {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.15), transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+}
+
+.hero .badge {
+    margin-bottom: 1.5rem;
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--color-success);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.hero h1 {
+    font-size: 4rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, var(--color-primary), #a855f7, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    color: var(--color-text-secondary);
+    max-width: 600px;
+    margin: 0 auto 2.5rem;
+    line-height: 1.7;
+}
+
+.hero-cta {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 4rem;
+}
+
+.btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1rem;
+}
+
+/* Terminal Preview */
+.terminal-preview {
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    text-align: left;
+    max-width: 600px;
+    margin: 0 auto;
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
+    animation: fadeIn 0.5s ease 0.3s both;
+}
+
+.terminal-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--color-bg-card);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.terminal-dots {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.terminal-dots span {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.terminal-dots span:nth-child(1) {
+    background: #ff5f57;
+}
+
+.terminal-dots span:nth-child(2) {
+    background: #febc2e;
+}
+
+.terminal-dots span:nth-child(3) {
+    background: #28c840;
+}
+
+.terminal-title {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+
+.terminal-body {
+    padding: 1.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+}
+
+.terminal-line {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+}
+
+.terminal-line.dim {
+    color: var(--color-text-muted);
+}
+
+.terminal-line.success {
+    color: var(--color-success);
+}
+
+.terminal-prompt {
+    color: var(--color-primary);
+    margin-right: 0.5rem;
+}
+
+/* Waitlist Section */
+.waitlist-section {
+    padding: 4rem 2rem;
+    background: linear-gradient(180deg, transparent, var(--color-bg-elevated) 30%, var(--color-bg-elevated) 70%, transparent);
+    position: relative;
+}
+
+.waitlist-section::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(168, 85, 247, 0.08), transparent 70%);
+    pointer-events: none;
+}
+
+.waitlist-content {
+    max-width: 560px;
+    margin: 0 auto;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+.waitlist-content h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+.waitlist-content>p {
+    color: var(--color-text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+.waitlist-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.waitlist-input-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 0.5rem 0.5rem 0.5rem 1rem;
+    transition: all var(--transition-fast);
+}
+
+.waitlist-input-group:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-bg);
+}
+
+.waitlist-icon {
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+}
+
+.waitlist-input-group input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 0.75rem 0;
+    font-size: 0.95rem;
+    min-width: 0;
+}
+
+.waitlist-input-group input:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.waitlist-input-group .btn {
+    flex-shrink: 0;
+    padding: 0.75rem 1.25rem;
+}
+
+.waitlist-error {
+    color: var(--color-error);
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+}
+
+.waitlist-success {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1.25rem;
+    background: linear-gradient(135deg, var(--color-success-bg), rgba(16, 185, 129, 0.15));
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: var(--radius-lg);
+    color: var(--color-success);
+    font-weight: 500;
+}
+
+.waitlist-count {
+    margin-top: 1.25rem;
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+}
+
+.waitlist-count strong {
+    color: var(--color-text);
+}
+
+/* Features */
+.features {
+    padding: 6rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.features h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 3rem;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+.feature-card {
+    text-align: left;
+    padding: 2rem;
+}
+
+.feature-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--color-primary-bg);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+    margin-bottom: 1.25rem;
+}
+
+.feature-card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.feature-card p {
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+}
+
+/* Footer */
+.landing-footer {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--color-text-muted);
+    border-top: 1px solid var(--color-border);
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+
+    .hero h1 {
+        font-size: 3rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.1rem;
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .landing-nav {
+        padding: 1rem 1.25rem;
+        gap: 0.75rem;
+    }
+
+    .landing-logo {
+        font-size: 1.25rem;
+        gap: 0.5rem;
+    }
+
+    .landing-logo svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .landing-nav-links {
+        gap: 0.5rem;
+    }
+
+    .landing-nav-links .btn {
+        padding: 0.5rem 0.875rem;
+        font-size: 0.8rem;
+    }
+
+    .landing-nav-links .btn-ghost {
+        padding: 0.5rem 0.625rem;
+    }
+
+    .hero {
+        padding: 2.5rem 1.25rem 4rem;
+    }
+
+    .hero h1 {
+        font-size: 2.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+        padding: 0 0.5rem;
+    }
+
+    .hero-cta {
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-bottom: 3rem;
+        padding: 0 1rem;
+    }
+
+    .hero-cta .btn-lg {
+        width: 100%;
+        padding: 0.875rem 1.5rem;
+    }
+
+    .terminal-preview {
+        margin: 0 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+
+    .terminal-body {
+        padding: 1rem;
+        font-size: 0.8rem;
+    }
+
+    .terminal-line {
+        flex-wrap: wrap;
+    }
+
+    .features {
+        padding: 4rem 1.25rem;
+    }
+
+    .features h2 {
+        font-size: 1.75rem;
+        margin-bottom: 2rem;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .feature-card {
+        padding: 1.5rem;
+    }
+
+    .feature-card h3 {
+        font-size: 1.1rem;
+    }
+
+    .feature-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .landing-footer {
+        padding: 2rem 1.25rem;
+        font-size: 0.9rem;
+    }
+
+    /* Waitlist responsive */
+    .waitlist-section {
+        padding: 3rem 1.25rem;
+    }
+
+    .waitlist-content h2 {
+        font-size: 1.5rem;
+    }
+
+    .waitlist-input-group {
+        flex-direction: column;
+        padding: 0.75rem;
+        gap: 0.5rem;
+    }
+
+    .waitlist-input-group input {
+        width: 100%;
+        text-align: center;
+    }
+
+    .waitlist-input-group .btn {
+        width: 100%;
+    }
+
+    .waitlist-icon {
+        display: none;
+    }
+
+    .waitlist-success {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+    .landing-nav {
+        padding: 0.875rem 1rem;
+    }
+
+    .landing-logo {
+        font-size: 1.1rem;
+    }
+
+    .landing-logo span {
+        display: none;
+    }
+
+    .landing-nav-links .btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+    }
+
+    .hero {
+        padding: 2rem 1rem 3rem;
+    }
+
+    .hero h1 {
+        font-size: 1.875rem;
+    }
+
+    .hero .badge {
+        font-size: 0.7rem;
+        margin-bottom: 1rem;
+    }
+
+    .hero-subtitle {
+        font-size: 0.9rem;
+    }
+
+    .terminal-dots span {
+        width: 10px;
+        height: 10px;
+    }
+
+    .terminal-body {
+        font-size: 0.75rem;
+        padding: 0.875rem;
+    }
+
+    .features h2 {
+        font-size: 1.5rem;
+    }
+
+    .feature-card {
+        padding: 1.25rem;
+    }
+
+    .waitlist-content>p {
+        font-size: 0.9rem;
+    }
+
+    .waitlist-count {
+        font-size: 0.85rem;
+    }
+}
