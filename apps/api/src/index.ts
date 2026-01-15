@@ -74,6 +74,29 @@ app.register(webhookRoutes, { prefix: '/api/webhooks' });
 app.register(iacRoutes, { prefix: '/api/iac' });
 app.register(waitlistRoutes, { prefix: '/api/waitlist' });
 
+// Serve static frontend in production
+if (process.env.NODE_ENV === 'production') {
+    const fastifyStatic = await import('@fastify/static');
+    const webDistPath = join(__dirname, '../../web/dist');
+
+    if (fs.existsSync(webDistPath)) {
+        app.register(fastifyStatic.default, {
+            root: webDistPath,
+            prefix: '/',
+        });
+
+        // SPA fallback - serve index.html for all non-API routes
+        app.setNotFoundHandler((request, reply) => {
+            if (!request.url.startsWith('/api')) {
+                return reply.sendFile('index.html');
+            }
+            return reply.status(404).send({ error: 'Not found' });
+        });
+
+        console.log('📦 Serving static frontend from:', webDistPath);
+    }
+}
+
 // Start server
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const HOST = process.env.HOST || '0.0.0.0';
