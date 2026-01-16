@@ -243,9 +243,17 @@ async function buildAsync(project: Project, deploymentId: string, workDir: strin
         await git.clone(project.repo_url, workDir, ['--branch', project.branch, '--depth', '1']);
         appendLog(deploymentId, `✅ Repository cloned`);
 
+        // Remove .git directory (not needed in Docker image, causes tar-fs issues)
+        const gitDir = path.join(workDir, '.git');
+        try {
+            await fs.rm(gitDir, { recursive: true, force: true });
+        } catch {
+            // Ignore if .git doesn't exist
+        }
+
         // List files for buildpack detection
         const files = await fs.readdir(workDir);
-        appendLog(deploymentId, `📂 Files: ${files.join(', ')}`);
+        appendLog(deploymentId, `📂 Files: ${files.filter(f => !f.startsWith('.')).join(', ')}`);
 
         // Check for existing Dockerfile
         let dockerfilePath = path.join(workDir, 'Dockerfile');
