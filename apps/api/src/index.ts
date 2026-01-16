@@ -14,6 +14,7 @@ import deploymentRoutes from './routes/deployments.js';
 import webhookRoutes from './routes/webhooks.js';
 import iacRoutes from './routes/iac.js';
 import waitlistRoutes from './routes/waitlist.js';
+import logsRoutes from './routes/logs.js';
 
 // Initialize env
 config();
@@ -73,6 +74,7 @@ app.register(deploymentRoutes, { prefix: '/api/deployments' });
 app.register(webhookRoutes, { prefix: '/api/webhooks' });
 app.register(iacRoutes, { prefix: '/api/iac' });
 app.register(waitlistRoutes, { prefix: '/api/waitlist' });
+app.register(logsRoutes, { prefix: '/api/ws' });
 
 // Serve static frontend in production
 if (process.env.NODE_ENV === 'production') {

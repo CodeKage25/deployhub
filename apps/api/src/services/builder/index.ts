@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import db from '../../db/index.js';
 import { deployContainer } from '../deployer/index.js';
+import { logEmitter } from '../logEmitter.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const docker = new Docker();
@@ -199,11 +200,14 @@ function updateDeployment(id: string, updates: Partial<{ status: string; logs: s
     db.prepare(`UPDATE deployments SET ${sets.join(', ')} WHERE id = ?`).run(...values);
 }
 
-// Append to deployment logs
+// Append to deployment logs and emit for WebSocket
 function appendLog(id: string, message: string) {
     const deployment = db.prepare('SELECT logs FROM deployments WHERE id = ?').get(id) as any;
     const logs = (deployment?.logs || '') + message + '\n';
     db.prepare('UPDATE deployments SET logs = ? WHERE id = ?').run(logs, id);
+
+    // Emit for real-time WebSocket streaming
+    logEmitter.emitLog(id, message);
 }
 
 // Main build function
