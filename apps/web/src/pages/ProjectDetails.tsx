@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
     ArrowLeft,
@@ -51,6 +51,9 @@ export default function ProjectDetails() {
     const [selectedDeployment, setSelectedDeployment] = useState<Deployment | null>(null);
     const [logs, setLogs] = useState('');
     const [deploying, setDeploying] = useState(false);
+    const [isStreaming, setIsStreaming] = useState(false);
+    const wsRef = useRef<WebSocket | null>(null);
+    const logsEndRef = useRef<HTMLDivElement>(null);
 
     // Environment Variables state
     const [showEnvVars, setShowEnvVars] = useState(false);
@@ -93,20 +96,82 @@ export default function ProjectDetails() {
     const loadLogs = async (deploymentId: string) => {
         try {
             const data = await deployments.getLogs(deploymentId);
-            setLogs(data.logs);
+            setLogs(data.logs || '');
         } catch (err: any) {
             setLogs(`Failed to load logs: ${err.message}`);
         }
     };
 
+    // Connect to WebSocket for real-time logs
+    const connectWebSocket = useCallback((deploymentId: string) => {
+        // Close existing connection
+        if (wsRef.current) {
+            wsRef.current.close();
+        }
+
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/api/ws/logs/${deploymentId}`;
+
+        const ws = new WebSocket(wsUrl);
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+            setIsStreaming(true);
+            console.log('WebSocket connected for logs');
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'log') {
+                    setLogs(prev => prev + data.message + '\n');
+                    // Auto-scroll to bottom
+                    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+                } else if (data.type === 'status') {
+                    // Reload project to get updated deployment status
+                    loadProject();
+                }
+            } catch {
+                // Handle non-JSON messages
+            }
+        };
+
+        ws.onclose = () => {
+            setIsStreaming(false);
+            console.log('WebSocket disconnected');
+        };
+
+        ws.onerror = () => {
+            setIsStreaming(false);
+        };
+
+        return ws;
+    }, []);
+
+    // Cleanup WebSocket on unmount
+    useEffect(() => {
+        return () => {
+            if (wsRef.current) {
+                wsRef.current.close();
+            }
+        };
+    }, []);
+
     const handleDeploy = async () => {
         setDeploying(true);
+        setLogs(''); // Clear previous logs
         try {
-            await deployments.trigger(project!.id);
+            const deployment = await deployments.trigger(project!.id);
+
+            // Connect WebSocket for real-time logs
+            connectWebSocket(deployment.id);
+
+            // Select the new deployment
             await loadProject();
+
+            // The WebSocket will handle streaming logs in real-time
         } catch (err: any) {
             alert(`Failed to deploy: ${err.message}`);
-        } finally {
             setDeploying(false);
         }
     };
@@ -363,7 +428,15 @@ export default function ProjectDetails() {
 
                             <div className="deployment-logs">
                                 <div className="logs-header">
-                                    <h4>Build Logs</h4>
+                                    <h4>
+                                        Build Logs
+                                        {isStreaming && (
+                                            <span className="streaming-indicator">
+                                                <span className="streaming-dot"></span>
+                                                Live
+                                            </span>
+                                        )}
+                                    </h4>
                                     <button
                                         className="btn btn-ghost btn-sm"
                                         onClick={() => loadLogs(selectedDeployment.id)}
@@ -372,7 +445,10 @@ export default function ProjectDetails() {
                                         Refresh
                                     </button>
                                 </div>
-                                <pre className="logs-content">{logs || 'No logs available'}</pre>
+                                <pre className="logs-content">
+                                    {logs || 'No logs available'}
+                                    <div ref={logsEndRef} />
+                                </pre>
                             </div>
                         </>
                     ) : (
