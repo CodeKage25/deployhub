@@ -1,0 +1,114 @@
+/* Deployments Page */
+.deployments-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+
+/* Deployments List */
+.deployments-list {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.list-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 0.75fr 1.25fr 0.75fr;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--color-bg-elevated);
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.deployment-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 0.75fr 1.25fr 0.75fr;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+.deployment-row:last-child {
+    border-bottom: none;
+}
+
+.deployment-row:hover {
+    background: var(--color-bg-elevated);
+}
+
+.deployment-project a {
+    color: var(--color-text);
+    font-weight: 500;
+}
+
+.deployment-project a:hover {
+    color: var(--color-primary);
+}
+
+.port-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--color-primary);
+    font-family: monospace;
+    font-size: 0.8rem;
+}
+
+.port-link:hover {
+    text-decoration: underline;
+}
+
+.no-port {
+    color: var(--color-text-muted);
+}
+
+.deployment-date {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+}
+
+.deployment-actions {
+    display: flex;
+    gap: 0.375rem;
+}
+
+.btn-ghost {
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    padding: 0.375rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-ghost:hover {
+    background: var(--color-bg-elevated);
+    color: var(--color-text);
+}
+
+/* Status variants */
+.status-stopped {
+    background: rgba(107, 114, 128, 0.15);
+    color: #6b7280;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .list-header {
+        display: none;
+    }
+
+    .deployment-row {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+}
