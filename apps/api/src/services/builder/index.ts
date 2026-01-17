@@ -2,12 +2,15 @@ import { nanoid } from 'nanoid';
 import Docker from 'dockerode';
 import { simpleGit } from 'simple-git';
 import fs from 'fs/promises';
-import path from 'path';
+import * as tar from 'tar-fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import path from 'path';
 import db from '../../db/index.js';
 import { deployContainer } from '../deployer/index.js';
 import { logEmitter } from '../logEmitter.js';
+
+
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const docker = new Docker();
@@ -285,8 +288,23 @@ async function buildAsync(project: Project, deploymentId: string, workDir: strin
         appendLog(deploymentId, `\n🐳 Building Docker image: ${imageName}`);
         updateDeployment(deploymentId, { status: 'building' });
 
+        // Pack directory using tar-fs
+        const tarStream = tar.pack(workDir, {
+            ignore: (name) => {
+                // Ignore .git and node_modules explicitly if needed
+                return name.includes('.git');
+            }
+        });
+
+        // Handle tar stream errors to prevent crash
+        tarStream.on('error', (err) => {
+            appendLog(deploymentId, `❌ Error packing build context: ${err.message}`);
+            // We can't easily reject the await below, but we can prevent the crash
+            console.error('Tar packing error:', err);
+        });
+
         const buildStream = await docker.buildImage(
-            { context: workDir, src: ['.'] },
+            tarStream,
             { t: imageName }
         );
 

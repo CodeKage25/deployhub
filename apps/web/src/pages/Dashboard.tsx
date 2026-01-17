@@ -221,7 +221,7 @@ export default function Dashboard() {
                                 <div
                                     key={project.id}
                                     className={`project-card ${project.latest_status === 'running' ? 'is-running' :
-                                            ['building', 'deploying'].includes(project.latest_status || '') ? 'is-building' : ''
+                                        ['building', 'deploying'].includes(project.latest_status || '') ? 'is-building' : ''
                                         }`}
                                 >
                                     <div className="project-header">
@@ -306,7 +306,7 @@ function NewProjectModal({ onClose, onCreated }: { onClose: () => void; onCreate
         setCreating(true);
 
         try {
-            await projects.create({ name, repo_url: repoUrl, branch });
+            await projects.create({ name, repoUrl, branch });
             onCreated();
         } catch (err: any) {
             setError(err.message);

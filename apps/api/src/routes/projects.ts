@@ -88,6 +88,9 @@ export default async function projectRoutes(app: FastifyInstance) {
         const user = request.user as any;
         const { name, repoUrl, branch = 'main', envVars = {} } = request.body;
 
+        console.log('Creating project. Body:', JSON.stringify(request.body));
+        console.log('Parsed fields:', { name, repoUrl });
+
         if (!name || !repoUrl) {
             return reply.status(400).send({ error: 'Name and repo URL required' });
         }
