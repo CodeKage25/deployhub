@@ -420,9 +420,11 @@ export default function ProjectDetails() {
                     {selectedDeployment ? (
                         <>
                             <div className="deployment-header">
-                                <h3>Deployment {selectedDeployment.id.slice(0, 8)}</h3>
-                                <span className={`badge badge-${selectedDeployment.status === 'running' ? 'success' : selectedDeployment.status === 'failed' ? 'error' : 'warning'}`}>
-                                    {selectedDeployment.status}
+                                <h3>
+                                    Deployment <span>{selectedDeployment.id.slice(0, 8)}</span>
+                                </h3>
+                                <span className={`status-badge ${selectedDeployment.status === 'running' ? 'success' : selectedDeployment.status === 'failed' ? 'failed' : 'building'}`}>
+                                    {selectedDeployment.status === 'running' ? 'Live' : selectedDeployment.status.toUpperCase()}
                                 </span>
                             </div>
 
@@ -451,15 +453,15 @@ export default function ProjectDetails() {
                                         )}
                                     </h4>
                                     <button
-                                        className="btn btn-ghost btn-sm"
+                                        className="refresh-btn"
                                         onClick={() => loadLogs(selectedDeployment.id)}
                                     >
-                                        <RefreshCw size={14} />
+                                        <RefreshCw size={13} />
                                         Refresh
                                     </button>
                                 </div>
                                 <pre className="logs-content">
-                                    {logs || 'No logs available'}
+                                    {logs || 'Waiting for logs...'}
                                     <div ref={logsEndRef} />
                                 </pre>
                             </div>
