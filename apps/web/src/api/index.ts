@@ -124,3 +124,24 @@ export const waitlist = {
 
     getCount: () => apiFetch('/waitlist/count'),
 };
+
+// AI Services
+export const ai = {
+    analyze: (logs: string, projectId?: string) =>
+        apiFetch('/ai/analyze', {
+            method: 'POST',
+            body: JSON.stringify({ logs, projectId }),
+        }),
+
+    suggestFix: (errorType: string, errorMessage: string) =>
+        apiFetch('/ai/suggest-fix', {
+            method: 'POST',
+            body: JSON.stringify({ errorType, errorMessage }),
+        }),
+
+    chat: (message: string, context?: any) =>
+        apiFetch('/ai/chat', {
+            method: 'POST',
+            body: JSON.stringify({ message, context }),
+        }),
+};

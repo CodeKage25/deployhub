@@ -15,6 +15,7 @@ import {
     Menu,
     X
 } from 'lucide-react';
+import AICopilot from './AICopilot';
 import './Layout.css';
 
 interface LayoutProps {
@@ -123,6 +124,9 @@ export default function Layout({ children }: LayoutProps) {
             <main className="app-main">
                 {children}
             </main>
+
+            {/* AI Deploy Copilot */}
+            <AICopilot />
         </div>
     );
 }

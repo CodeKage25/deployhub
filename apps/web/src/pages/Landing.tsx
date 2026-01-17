@@ -1,13 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
-    Rocket, ArrowRight, Check, Mail, Loader2,
-    CheckCircle, Zap, Shield, Globe, Database, Users, Terminal
+    Rocket, ArrowRight,
+    Zap, Shield, Globe, Database, Users, Terminal
 } from 'lucide-react';
-import { waitlist } from '../api';
 import './Landing.css';
 
-// Supported languages with SVG-like styling (inspired by pxxl.pro)
+// Supported languages with SVG-like styling
 const languages = [
     { name: 'Next.js', desc: 'React framework with SSR', icon: 'N', color: '#fff', bg: '#000' },
     { name: 'Express', desc: 'Node.js web framework', icon: 'ex', color: '#fafafa', bg: '#333' },
@@ -82,21 +81,10 @@ interface LogEntry {
 }
 
 export default function Landing() {
-    const [email, setEmail] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [success, setSuccess] = useState(false);
-    const [error, setError] = useState('');
-    const [waitlistCount, setWaitlistCount] = useState<number | null>(null);
     const [visibleLogs, setVisibleLogs] = useState<LogEntry[]>([]);
     const logsRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        waitlist.getCount()
-            .then((data: any) => setWaitlistCount(data.count))
-            .catch(() => { });
-    }, []);
-
-    // Animate deployment logs - FIXED VERSION
+    // Animate deployment logs
     useEffect(() => {
         let currentIndex = 0;
         let intervalId: NodeJS.Timeout;
@@ -108,13 +96,11 @@ export default function Landing() {
                     if (logToAdd) {
                         setVisibleLogs(prev => [...prev, logToAdd]);
                         currentIndex++;
-                        // Auto-scroll
                         if (logsRef.current) {
                             logsRef.current.scrollTop = logsRef.current.scrollHeight;
                         }
                     }
                 } else {
-                    // Stop interval, wait, then restart
                     clearInterval(intervalId);
                     setTimeout(() => {
                         setVisibleLogs([]);
@@ -129,23 +115,6 @@ export default function Landing() {
 
         return () => clearInterval(intervalId);
     }, []);
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
-
-        try {
-            await waitlist.join(email);
-            setSuccess(true);
-            const data = await waitlist.getCount();
-            setWaitlistCount(data.count);
-        } catch (err: any) {
-            setError(err.message || 'Something went wrong');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     return (
         <div className="landing">
@@ -167,7 +136,7 @@ export default function Landing() {
                 <div className="hero-content">
                     <div className="badge">
                         <span className="pulse-dot"></span>
-                        Open for early access
+                        Now in Public Beta
                     </div>
                     <h1>
                         Deploy Your Code<br />
@@ -187,7 +156,7 @@ export default function Landing() {
                     </div>
                 </div>
 
-                {/* Terminal Preview - FIXED */}
+                {/* Terminal Preview */}
                 <div className="terminal-preview">
                     <div className="terminal-header">
                         <div className="terminal-dots">
@@ -212,7 +181,7 @@ export default function Landing() {
                 </div>
             </section>
 
-            {/* Languages Grid - NEW DESIGN */}
+            {/* Languages Grid */}
             <section className="languages-section">
                 <h2>Deploy Any Stack</h2>
                 <p className="section-subtitle">We auto-detect your framework. No configuration needed.</p>
@@ -245,39 +214,14 @@ export default function Landing() {
                 </div>
             </section>
 
-            {/* Waitlist */}
-            <section className="waitlist-section">
-                <div className="waitlist-content">
-                    <h2>Get Early Access</h2>
-                    <p>Join the waitlist and be the first to deploy when we launch.</p>
-                    {success ? (
-                        <div className="waitlist-success">
-                            <CheckCircle size={24} />
-                            <span>You're on the list! We'll notify you when we launch.</span>
-                        </div>
-                    ) : (
-                        <form onSubmit={handleSubmit} className="waitlist-form">
-                            <div className="waitlist-input-group">
-                                <Mail size={20} className="waitlist-icon" />
-                                <input
-                                    type="email"
-                                    placeholder="you@example.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                />
-                                <button type="submit" className="btn btn-primary" disabled={loading}>
-                                    {loading ? <Loader2 size={18} className="spin" /> : 'Join Waitlist'}
-                                </button>
-                            </div>
-                            {error && <p className="waitlist-error">{error}</p>}
-                        </form>
-                    )}
-                    {waitlistCount !== null && (
-                        <p className="waitlist-count">
-                            <strong>{waitlistCount}</strong> developers already signed up
-                        </p>
-                    )}
+            {/* CTA Section (replaced waitlist) */}
+            <section className="cta-section">
+                <div className="cta-content">
+                    <h2>Ready to Ship Faster?</h2>
+                    <p>Join thousands of developers deploying with DeployHub.</p>
+                    <Link to="/register" className="btn btn-primary btn-lg">
+                        Get Started Free <ArrowRight size={18} />
+                    </Link>
                 </div>
             </section>
 
