@@ -97,7 +97,14 @@ export default function ProjectDetails() {
             const data = await projects.get(id!);
             setProject(data);
             if (data.deployments.length > 0) {
-                setSelectedDeployment(data.deployments[0]);
+                // Prioritize building/deploying deployment, otherwise select the first one
+                const activeDeployment = data.deployments.find(
+                    (d: Deployment) => d.status === 'building' || d.status === 'deploying'
+                );
+                const runningDeployment = data.deployments.find(
+                    (d: Deployment) => d.status === 'running'
+                );
+                setSelectedDeployment(activeDeployment || runningDeployment || data.deployments[0]);
             }
         } catch (err: any) {
             setError(err.message);
@@ -105,6 +112,20 @@ export default function ProjectDetails() {
             setLoading(false);
         }
     };
+
+    // Poll for updates when there's an active deployment
+    useEffect(() => {
+        const hasActiveDeployment = project?.deployments.some(
+            (d: Deployment) => d.status === 'building' || d.status === 'deploying'
+        );
+
+        if (hasActiveDeployment) {
+            const interval = setInterval(() => {
+                loadProject();
+            }, 3000);
+            return () => clearInterval(interval);
+        }
+    }, [project]);
 
     const loadLogs = async (deploymentId: string) => {
         try {
