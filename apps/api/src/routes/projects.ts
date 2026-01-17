@@ -62,6 +62,27 @@ export default async function projectRoutes(app: FastifyInstance) {
         };
     });
 
+    // List deployments for a project
+    app.get<{ Params: { id: string } }>('/:id/deployments', async (request, reply) => {
+        const user = request.user as any;
+        const { id } = request.params;
+
+        const project = db.prepare(`
+      SELECT * FROM projects WHERE id = ? AND user_id = ?
+    `).get(id, user.id);
+
+        if (!project) {
+            return reply.status(404).send({ error: 'Project not found' });
+        }
+
+        const deployments = db.prepare(`
+      SELECT * FROM deployments WHERE project_id = ? ORDER BY started_at DESC
+    `).all(id);
+
+        return deployments;
+    });
+
+
     // Create project
     app.post<{ Body: CreateProjectBody }>('/', async (request, reply) => {
         const user = request.user as any;

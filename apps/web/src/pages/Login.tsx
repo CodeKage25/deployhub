@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Rocket, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Rocket, Eye, EyeOff, GitBranch, Zap, Shield } from 'lucide-react';
 import { auth } from '../api';
 import { useAuthStore } from '../hooks/useAuth';
 import './Auth.css';
@@ -42,7 +42,7 @@ export default function Login() {
 
                     <div className="auth-header">
                         <h1>Welcome Back</h1>
-                        <p>Login and Deploy in seconds</p>
+                        <p>Sign in to manage your deployments</p>
                     </div>
 
                     {/* GitHub OAuth */}
@@ -73,7 +73,7 @@ export default function Login() {
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder="johndoe@gmail.com"
+                                placeholder="you@company.com"
                                 required
                             />
                         </div>
@@ -89,7 +89,7 @@ export default function Login() {
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="Min. 8 characters"
+                                    placeholder="Enter your password"
                                     required
                                 />
                                 <button
@@ -103,12 +103,12 @@ export default function Login() {
                         </div>
 
                         <button type="submit" className="btn btn-primary btn-auth-submit" disabled={loading}>
-                            {loading ? 'Signing in...' : 'Login'}
+                            {loading ? 'Signing in...' : 'Sign In'}
                         </button>
                     </form>
 
                     <p className="auth-footer">
-                        Not yet registered? <Link to="/register">Create an Account</Link>
+                        Don't have an account? <Link to="/register">Get Started Free</Link>
                     </p>
                 </div>
             </div>
@@ -116,20 +116,35 @@ export default function Login() {
             {/* Right side - Hero */}
             <div className="auth-hero-side">
                 <div className="auth-hero-content">
-                    <div className="hero-text">
-                        <h2>DeployHub</h2>
-                        <p>Create account and Deploy in seconds</p>
+                    {/* Animated Deploy Text */}
+                    <div className="hero-animated-text">
+                        <span className="word">deploy</span>
+                        <span className="dot">.</span>
+                        <span className="word">ship</span>
+                        <span className="dot">.</span>
+                        <span className="word">scale</span>
                     </div>
-                    <div className="hero-marquee">
-                        <span>CODE</span>
-                        <span className="dot">•</span>
-                        <span>DEPLOY</span>
-                        <span className="dot">•</span>
-                        <span>SHIP</span>
-                        <span className="dot">•</span>
-                        <span>CODE</span>
-                        <span className="dot">•</span>
-                        <span>DEPLOY</span>
+
+                    {/* Tagline */}
+                    <p className="hero-tagline">
+                        From git push to production in minutes.<br />
+                        Zero configuration. Infinite scale.
+                    </p>
+
+                    {/* Feature Pills */}
+                    <div className="hero-features">
+                        <div className="feature-pill">
+                            <GitBranch size={16} />
+                            <span>Git-Based Deploys</span>
+                        </div>
+                        <div className="feature-pill">
+                            <Zap size={16} />
+                            <span>Auto Buildpacks</span>
+                        </div>
+                        <div className="feature-pill">
+                            <Shield size={16} />
+                            <span>Free HTTPS</span>
+                        </div>
                     </div>
                 </div>
             </div>

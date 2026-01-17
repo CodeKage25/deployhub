@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../hooks/useAuth';
 import {
@@ -11,7 +11,9 @@ import {
     Layers,
     User,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Menu,
+    X
 } from 'lucide-react';
 import './Layout.css';
 
@@ -24,6 +26,12 @@ export default function Layout({ children }: LayoutProps) {
     const location = useLocation();
     const { user, logout } = useAuthStore();
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    // Close mobile menu on route change
+    useEffect(() => {
+        setMobileMenuOpen(false);
+    }, [location.pathname]);
 
     const handleLogout = () => {
         logout();
@@ -44,8 +52,31 @@ export default function Layout({ children }: LayoutProps) {
 
     return (
         <div className={`app-layout ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+            {/* Mobile Header */}
+            <header className="mobile-header">
+                <Link to="/" className="mobile-logo">
+                    <Rocket size={22} />
+                    <span>DeployHub</span>
+                </Link>
+                <button
+                    className="mobile-menu-btn"
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    aria-label="Toggle menu"
+                >
+                    {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                </button>
+            </header>
+
+            {/* Mobile Overlay */}
+            {mobileMenuOpen && (
+                <div
+                    className="mobile-overlay"
+                    onClick={() => setMobileMenuOpen(false)}
+                />
+            )}
+
             {/* Sidebar */}
-            <aside className="app-sidebar">
+            <aside className={`app-sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}>
                 <div className="sidebar-header">
                     <Link to="/" className="sidebar-logo">
                         <Rocket size={22} />

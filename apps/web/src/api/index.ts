@@ -76,6 +76,8 @@ export const projects = {
 
 // Deployments
 export const deployments = {
+    list: (projectId: string) => apiFetch(`/projects/${projectId}/deployments`),
+
     get: (id: string) => apiFetch(`/deployments/${id}`),
 
     getLogs: (id: string) => apiFetch(`/deployments/${id}/logs`),
