@@ -6,13 +6,18 @@ import {
     useNodesState,
     useEdgesState,
     addEdge,
-    Node,
-    Edge,
     Connection,
     BackgroundVariant,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Upload, FileCode, Loader2, Trash2, Save } from 'lucide-react';
+import {
+    Upload,
+    FileCode,
+    Loader2,
+    Trash2,
+    Save,
+    AlertCircle
+} from 'lucide-react';
 import { iac } from '../api';
 import ResourceNode from '../components/ResourceNode';
 import './IacVisualizer.css';
@@ -55,7 +60,6 @@ export default function IacVisualizer() {
             const data = await iac.getDiagram(id);
             setCurrentDiagram(id);
 
-            // Apply custom node type
             const nodesWithType = data.layout.nodes?.map((node: any) => ({
                 ...node,
                 type: 'resourceNode',
@@ -104,20 +108,21 @@ export default function IacVisualizer() {
     };
 
     return (
-        <div className="iac-visualizer">
-            <header className="iac-header">
-                <div>
+        <div className="iac-page">
+            {/* Header */}
+            <header className="page-header">
+                <div className="header-left">
                     <h1>IaC Visualizer</h1>
-                    <p>Visualize your Terraform and CloudFormation infrastructure</p>
+                    <p>Visualize Terraform and CloudFormation</p>
                 </div>
-                <div className="iac-actions">
+                <div className="header-actions">
                     {currentDiagram && (
-                        <button className="btn btn-secondary" onClick={handleSaveLayout}>
+                        <button className="btn btn-secondary btn-sm" onClick={handleSaveLayout}>
                             <Save size={16} />
                             Save Layout
                         </button>
                     )}
-                    <button className="btn btn-primary" onClick={() => setShowUpload(true)}>
+                    <button className="btn btn-primary btn-sm" onClick={() => setShowUpload(true)}>
                         <Upload size={16} />
                         Upload IaC
                     </button>
@@ -125,8 +130,8 @@ export default function IacVisualizer() {
             </header>
 
             <div className="iac-content">
-                {/* Sidebar with diagrams list */}
-                <aside className="iac-sidebar">
+                {/* Saved Diagrams Panel */}
+                <div className="diagrams-panel">
                     <h3>Saved Diagrams</h3>
                     {diagrams.length === 0 ? (
                         <p className="no-diagrams">No diagrams yet</p>
@@ -157,19 +162,19 @@ export default function IacVisualizer() {
                             ))}
                         </div>
                     )}
-                </aside>
+                </div>
 
                 {/* Canvas */}
-                <main className="iac-canvas">
+                <div className="canvas-wrapper">
                     {loading ? (
                         <div className="canvas-loading">
                             <Loader2 className="spin" size={32} />
                         </div>
                     ) : nodes.length === 0 ? (
                         <div className="canvas-empty">
-                            <FileCode size={48} />
-                            <h2>No diagram loaded</h2>
-                            <p>Upload a Terraform or CloudFormation file to visualize</p>
+                            <FileCode size={40} />
+                            <h3>No diagram loaded</h3>
+                            <p>Upload a Terraform or CloudFormation file</p>
                         </div>
                     ) : (
                         <ReactFlow
@@ -186,7 +191,7 @@ export default function IacVisualizer() {
                             <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
                         </ReactFlow>
                     )}
-                </main>
+                </div>
             </div>
 
             {/* Upload Modal */}
@@ -197,7 +202,6 @@ export default function IacVisualizer() {
                         setShowUpload(false);
                         loadDiagrams();
 
-                        // Load the new diagram
                         const nodesWithType = data.diagram.nodes?.map((node: any) => ({
                             ...node,
                             type: 'resourceNode',
@@ -235,7 +239,6 @@ function UploadModal({
         reader.onload = (event) => {
             setContent(event.target?.result as string);
 
-            // Auto-detect type from extension
             if (file.name.endsWith('.tf')) {
                 setSourceType('terraform');
             } else if (file.name.endsWith('.json') || file.name.endsWith('.yaml') || file.name.endsWith('.yml')) {
@@ -243,7 +246,7 @@ function UploadModal({
             }
 
             if (!name) {
-                setName(file.name.replace(/\.[^.]+$/, ''));
+                setName(file.name.replace(/\.[^/.]+$/, ''));
             }
         };
         reader.readAsText(file);
@@ -255,10 +258,14 @@ function UploadModal({
         setLoading(true);
 
         try {
-            const result = await iac.parse({ name, sourceType, content });
+            const result = await iac.parseDiagram({
+                name,
+                source_type: sourceType,
+                content,
+            });
             onUploaded(result);
         } catch (err: any) {
-            setError(err.message);
+            setError(err.message || 'Failed to parse');
         } finally {
             setLoading(false);
         }
@@ -266,55 +273,55 @@ function UploadModal({
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal modal-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
                 <h2>Upload IaC File</h2>
+                <p className="modal-subtitle">Upload Terraform (.tf) or CloudFormation (.json, .yaml)</p>
 
                 <form onSubmit={handleSubmit}>
-                    {error && <div className="auth-error">{error}</div>}
+                    {error && (
+                        <div className="form-error">
+                            <AlertCircle size={16} />
+                            {error}
+                        </div>
+                    )}
 
                     <div className="form-group">
-                        <label>Diagram Name</label>
+                        <label>Name</label>
                         <input
-                            type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            placeholder="My Infrastructure"
+                            placeholder="my-infrastructure"
                             required
                         />
                     </div>
 
                     <div className="form-group">
-                        <label>Source Type</label>
+                        <label>Type</label>
                         <select
                             value={sourceType}
                             onChange={(e) => setSourceType(e.target.value as any)}
                         >
-                            <option value="terraform">Terraform (.tf)</option>
-                            <option value="cloudformation">CloudFormation (JSON/YAML)</option>
+                            <option value="terraform">Terraform</option>
+                            <option value="cloudformation">CloudFormation</option>
                         </select>
                     </div>
 
                     <div className="form-group">
-                        <label>Upload File or Paste Content</label>
+                        <label>File</label>
                         <input
                             type="file"
                             accept=".tf,.json,.yaml,.yml"
                             onChange={handleFileUpload}
-                            className="file-input"
                         />
                     </div>
 
                     <div className="form-group">
-                        <label>IaC Content</label>
+                        <label>Or paste content</label>
                         <textarea
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
-                            placeholder={sourceType === 'terraform'
-                                ? 'resource "aws_instance" "example" {\n  ami = "ami-12345"\n  instance_type = "t2.micro"\n}'
-                                : '{\n  "Resources": {\n    "MyInstance": {\n      "Type": "AWS::EC2::Instance"\n    }\n  }\n}'
-                            }
-                            rows={12}
-                            required
+                            placeholder="Paste your IaC content here..."
+                            rows={6}
                         />
                     </div>
 
@@ -322,8 +329,18 @@ function UploadModal({
                         <button type="button" className="btn btn-secondary" onClick={onClose}>
                             Cancel
                         </button>
-                        <button type="submit" className="btn btn-primary" disabled={loading}>
-                            {loading ? 'Parsing...' : 'Parse & Visualize'}
+                        <button type="submit" className="btn btn-primary" disabled={loading || !content}>
+                            {loading ? (
+                                <>
+                                    <Loader2 size={16} className="spin" />
+                                    Parsing...
+                                </>
+                            ) : (
+                                <>
+                                    <Upload size={16} />
+                                    Parse & Visualize
+                                </>
+                            )}
                         </button>
                     </div>
                 </form>

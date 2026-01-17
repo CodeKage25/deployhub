@@ -335,6 +335,9 @@ async function buildAsync(project: Project, deploymentId: string, workDir: strin
         appendLog(deploymentId, `\n✨ Deployment complete!`);
         appendLog(deploymentId, `🔗 Access at: http://localhost:${containerInfo.port}`);
 
+        // Notify WebSocket clients that build is complete
+        logEmitter.emitStatus(deploymentId, 'running');
+
         // Cleanup work directory
         await fs.rm(workDir, { recursive: true, force: true });
 
@@ -344,6 +347,9 @@ async function buildAsync(project: Project, deploymentId: string, workDir: strin
             status: 'failed',
             finished_at: new Date().toISOString(),
         });
+
+        // Notify WebSocket clients that build failed
+        logEmitter.emitStatus(deploymentId, 'failed');
 
         // Cleanup on failure
         try {

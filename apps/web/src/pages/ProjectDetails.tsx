@@ -69,7 +69,20 @@ export default function ProjectDetails() {
 
     useEffect(() => {
         if (selectedDeployment) {
+            // Load existing logs first
             loadLogs(selectedDeployment.id);
+
+            // If deployment is still building, connect WebSocket for real-time updates
+            if (selectedDeployment.status === 'building' || selectedDeployment.status === 'deploying') {
+                connectWebSocket(selectedDeployment.id);
+            } else {
+                // Close WebSocket if not building
+                if (wsRef.current) {
+                    wsRef.current.close();
+                    wsRef.current = null;
+                }
+                setIsStreaming(false);
+            }
         }
     }, [selectedDeployment]);
 

@@ -4,18 +4,17 @@ import {
     Plus,
     Rocket,
     GitBranch,
-    Clock,
     ExternalLink,
     Loader2,
     AlertCircle,
-    Folder,
-    Activity,
     CheckCircle2,
     XCircle,
-    Layers,
-    Box
+    Box,
+    FolderKanban,
+    Clock
 } from 'lucide-react';
 import { projects, deployments } from '../api';
+import { useAuthStore } from '../hooks/useAuth';
 import './Dashboard.css';
 
 interface Project {
@@ -29,7 +28,15 @@ interface Project {
     created_at: string;
 }
 
+function getGreeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+}
+
 export default function Dashboard() {
+    const { user } = useAuthStore();
     const [projectList, setProjectList] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -55,7 +62,6 @@ export default function Dashboard() {
         setDeployingId(projectId);
         try {
             await deployments.trigger(projectId);
-            // Reload projects to get updated status
             loadProjects();
         } catch (err: any) {
             alert(`Failed to deploy: ${err.message}`);
@@ -68,7 +74,7 @@ export default function Dashboard() {
         switch (status) {
             case 'running':
                 return (
-                    <span className="badge badge-success">
+                    <span className="status-badge status-running">
                         <CheckCircle2 size={12} />
                         Running
                     </span>
@@ -76,21 +82,21 @@ export default function Dashboard() {
             case 'building':
             case 'deploying':
                 return (
-                    <span className="badge badge-warning">
+                    <span className="status-badge status-building">
                         <Loader2 size={12} className="spin" />
                         Building
                     </span>
                 );
             case 'failed':
                 return (
-                    <span className="badge badge-error">
+                    <span className="status-badge status-failed">
                         <XCircle size={12} />
                         Failed
                     </span>
                 );
             default:
                 return (
-                    <span className="badge badge-neutral">
+                    <span className="status-badge status-idle">
                         <Clock size={12} />
                         Not deployed
                     </span>
@@ -98,83 +104,182 @@ export default function Dashboard() {
         }
     };
 
-    // Calculate stats
-    const stats = {
-        total: projectList.length,
-        running: projectList.filter(p => p.latest_status === 'running').length,
-        building: projectList.filter(p => ['building', 'deploying'].includes(p.latest_status || '')).length,
-        failed: projectList.filter(p => p.latest_status === 'failed').length,
-    };
+    // Stats
+    const runningProjects = projectList.filter(p => p.latest_status === 'running').length;
+    const totalDeployments = projectList.reduce((acc, p) => acc + p.deployment_count, 0);
 
     if (loading) {
         return (
-            <div className="dashboard-loading">
-                <div className="loading-spinner" />
+            <div className="page-loading">
+                <Loader2 size={40} className="spin" />
                 <p>Loading your projects...</p>
             </div>
         );
     }
 
     return (
-        <div className="dashboard">
-            {/* Hero Header */}
-            <div className="dashboard-hero">
-                <header className="dashboard-header">
-                    <div className="dashboard-header-content">
-                        <h1>Your Projects</h1>
-                        <p>Manage, deploy, and monitor your applications</p>
+        <div className="dashboard-page">
+            {/* Top Bar */}
+            <header className="page-header">
+                <div className="header-left">
+                    <h1>Dashboard</h1>
+                </div>
+                <button className="btn btn-primary btn-sm" onClick={() => setShowNewProject(true)}>
+                    <Plus size={16} />
+                    New Project
+                </button>
+            </header>
+
+            <div className="page-content">
+                {/* Greeting */}
+                <div className="greeting">
+                    <h2>{getGreeting()}, {user?.email?.split('@')[0] || 'Developer'}</h2>
+                    <p>What are you deploying today?</p>
+                </div>
+
+                {error && (
+                    <div className="error-banner">
+                        <AlertCircle size={18} />
+                        {error}
                     </div>
-                    <button
-                        className="btn btn-primary"
-                        onClick={() => setShowNewProject(true)}
-                    >
+                )}
+
+                {/* Stats Grid */}
+                <div className="stats-row">
+                    <div className="stat-card">
+                        <div className="stat-icon">
+                            <FolderKanban size={20} />
+                        </div>
+                        <div className="stat-content">
+                            <span className="stat-label">My Projects</span>
+                            <span className="stat-value">{projectList.length}</span>
+                        </div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-icon">
+                            <CheckCircle2 size={20} />
+                        </div>
+                        <div className="stat-content">
+                            <span className="stat-label">Running</span>
+                            <span className="stat-value">{runningProjects}</span>
+                        </div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-icon">
+                            <Rocket size={20} />
+                        </div>
+                        <div className="stat-content">
+                            <span className="stat-label">Total Deploys</span>
+                            <span className="stat-value">{totalDeployments}</span>
+                        </div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-icon">
+                            <Clock size={20} />
+                        </div>
+                        <div className="stat-content">
+                            <span className="stat-label">Build Minutes</span>
+                            <span className="stat-value">{Math.floor(totalDeployments * 2.5)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Quick Action Banner */}
+                <div className="action-banner">
+                    <div className="banner-content">
+                        <h3>Connect Your <span className="highlight">Git Repository</span></h3>
+                        <p>Push to your repo and we'll automatically build and deploy.</p>
+                    </div>
+                    <button className="btn btn-primary" onClick={() => setShowNewProject(true)}>
                         <Plus size={18} />
                         New Project
                     </button>
-                </header>
+                </div>
+
+                {/* Recently Deployed */}
+                <section className="section">
+                    <h3>Recently Deployed</h3>
+
+                    {projectList.length === 0 ? (
+                        <div className="empty-state">
+                            <div className="empty-icon">
+                                <Rocket size={40} />
+                            </div>
+                            <h4>No projects yet</h4>
+                            <p>Create your first project to start deploying</p>
+                            <button
+                                className="btn btn-primary"
+                                onClick={() => setShowNewProject(true)}
+                            >
+                                <Plus size={18} />
+                                Create Project
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="projects-grid">
+                            {projectList.map((project) => (
+                                <div
+                                    key={project.id}
+                                    className={`project-card ${project.latest_status === 'running' ? 'is-running' :
+                                            ['building', 'deploying'].includes(project.latest_status || '') ? 'is-building' : ''
+                                        }`}
+                                >
+                                    <div className="project-header">
+                                        <h4>{project.name}</h4>
+                                        {getStatusBadge(project.latest_status)}
+                                    </div>
+
+                                    <div className="project-meta">
+                                        <span className="meta-item">
+                                            <GitBranch size={14} />
+                                            {project.branch}
+                                        </span>
+                                        <span className="meta-item">
+                                            <Rocket size={14} />
+                                            {project.deployment_count} deploys
+                                        </span>
+                                    </div>
+
+                                    <p className="project-repo">{project.repo_url}</p>
+
+                                    {project.buildpack && (
+                                        <span className="buildpack-badge">
+                                            <Box size={12} />
+                                            {project.buildpack}
+                                        </span>
+                                    )}
+
+                                    <div className="project-actions">
+                                        <Link to={`/projects/${project.id}`} className="btn btn-secondary btn-sm">
+                                            <ExternalLink size={14} />
+                                            Details
+                                        </Link>
+                                        <button
+                                            className="btn btn-primary btn-sm"
+                                            onClick={() => handleDeploy(project.id)}
+                                            disabled={deployingId === project.id}
+                                        >
+                                            {deployingId === project.id ? (
+                                                <>
+                                                    <Loader2 size={14} className="spin" />
+                                                    Deploying...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Rocket size={14} />
+                                                    Deploy
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </section>
             </div>
 
-            {error && (
-                <div className="dashboard-error">
-                    <AlertCircle size={18} />
-                    {error}
-                </div>
-            )}
-
-            {/* Stats Overview */}
-            {projectList.length > 0 && (
-                <div className="dashboard-stats">
-                    <div className="stat-card">
-                        <div className="stat-icon primary">
-                            <Folder size={22} />
-                        </div>
-                        <div className="stat-value">{stats.total}</div>
-                        <div className="stat-label">Total Projects</div>
-                    </div>
-                    <div className="stat-card">
-                        <div className="stat-icon success">
-                            <Activity size={22} />
-                        </div>
-                        <div className="stat-value">{stats.running}</div>
-                        <div className="stat-label">Running</div>
-                    </div>
-                    <div className="stat-card">
-                        <div className="stat-icon warning">
-                            <Loader2 size={22} />
-                        </div>
-                        <div className="stat-value">{stats.building}</div>
-                        <div className="stat-label">Building</div>
-                    </div>
-                    <div className="stat-card">
-                        <div className="stat-icon error">
-                            <XCircle size={22} />
-                        </div>
-                        <div className="stat-value">{stats.failed}</div>
-                        <div className="stat-label">Failed</div>
-                    </div>
-                </div>
-            )}
-
+            {/* New Project Modal */}
             {showNewProject && (
                 <NewProjectModal
                     onClose={() => setShowNewProject(false)}
@@ -184,137 +289,49 @@ export default function Dashboard() {
                     }}
                 />
             )}
-
-            {projectList.length === 0 ? (
-                <div className="dashboard-empty">
-                    <div className="empty-icon">
-                        <Rocket size={36} />
-                    </div>
-                    <h2>No projects yet</h2>
-                    <p>Create your first project to start deploying your code with a single click</p>
-                    <button
-                        className="btn btn-primary"
-                        onClick={() => setShowNewProject(true)}
-                    >
-                        <Plus size={18} />
-                        Create Your First Project
-                    </button>
-                </div>
-            ) : (
-                <>
-                    <div className="section-header">
-                        <h2>
-                            <Layers size={20} />
-                            All Projects
-                        </h2>
-                    </div>
-                    <div className="projects-grid">
-                        {projectList.map((project) => (
-                            <div key={project.id} className="project-card">
-                                <div className="project-header">
-                                    <div className="project-info">
-                                        <h3>{project.name}</h3>
-                                    </div>
-                                    {getStatusBadge(project.latest_status)}
-                                </div>
-
-                                <div className="project-meta">
-                                    <div className="project-meta-item">
-                                        <GitBranch size={14} />
-                                        <span>{project.branch}</span>
-                                    </div>
-                                    <div className="project-meta-item">
-                                        <Rocket size={14} />
-                                        <span>{project.deployment_count} deploys</span>
-                                    </div>
-                                </div>
-
-                                <div className="project-repo">{project.repo_url}</div>
-
-                                {project.buildpack && (
-                                    <div className="project-buildpack">
-                                        <Box size={14} />
-                                        {project.buildpack}
-                                    </div>
-                                )}
-
-                                <div className="project-actions">
-                                    <Link to={`/projects/${project.id}`} className="btn btn-secondary btn-sm">
-                                        <ExternalLink size={14} />
-                                        View Details
-                                    </Link>
-                                    <button
-                                        className="btn btn-primary btn-sm"
-                                        onClick={() => handleDeploy(project.id)}
-                                        disabled={deployingId === project.id}
-                                    >
-                                        {deployingId === project.id ? (
-                                            <>
-                                                <Loader2 size={14} className="spin" />
-                                                Deploying...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Rocket size={14} />
-                                                Deploy
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </>
-            )}
         </div>
     );
 }
 
-// New Project Modal Component
-function NewProjectModal({
-    onClose,
-    onCreated
-}: {
-    onClose: () => void;
-    onCreated: () => void;
-}) {
+function NewProjectModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
     const [name, setName] = useState('');
     const [repoUrl, setRepoUrl] = useState('');
     const [branch, setBranch] = useState('main');
-    const [loading, setLoading] = useState(false);
+    const [creating, setCreating] = useState(false);
     const [error, setError] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        setLoading(true);
+        setCreating(true);
 
         try {
-            await projects.create({ name, repoUrl, branch });
+            await projects.create({ name, repo_url: repoUrl, branch });
             onCreated();
         } catch (err: any) {
             setError(err.message);
         } finally {
-            setLoading(false);
+            setCreating(false);
         }
     };
 
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
-                <h2>Create New Project</h2>
-                <p className="modal-description">
-                    Connect a Git repository to deploy your application
-                </p>
+                <h2>New Project</h2>
+                <p className="modal-subtitle">Connect a Git repository to deploy</p>
 
                 <form onSubmit={handleSubmit}>
-                    {error && <div className="dashboard-error"><AlertCircle size={16} />{error}</div>}
+                    {error && (
+                        <div className="form-error">
+                            <AlertCircle size={16} />
+                            {error}
+                        </div>
+                    )}
 
                     <div className="form-group">
-                        <label htmlFor="project-name">Project Name</label>
+                        <label>Project Name</label>
                         <input
-                            id="project-name"
-                            type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="my-awesome-app"
@@ -323,22 +340,18 @@ function NewProjectModal({
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="repo-url">Repository URL</label>
+                        <label>Repository URL</label>
                         <input
-                            id="repo-url"
-                            type="url"
                             value={repoUrl}
                             onChange={(e) => setRepoUrl(e.target.value)}
-                            placeholder="https://github.com/username/repo"
+                            placeholder="https://github.com/user/repo"
                             required
                         />
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="branch">Branch</label>
+                        <label>Branch</label>
                         <input
-                            id="branch"
-                            type="text"
                             value={branch}
                             onChange={(e) => setBranch(e.target.value)}
                             placeholder="main"
@@ -349,8 +362,8 @@ function NewProjectModal({
                         <button type="button" className="btn btn-secondary" onClick={onClose}>
                             Cancel
                         </button>
-                        <button type="submit" className="btn btn-primary" disabled={loading}>
-                            {loading ? (
+                        <button type="submit" className="btn btn-primary" disabled={creating}>
+                            {creating ? (
                                 <>
                                     <Loader2 size={16} className="spin" />
                                     Creating...

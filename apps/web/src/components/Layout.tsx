@@ -3,11 +3,15 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../hooks/useAuth';
 import {
     Rocket,
-    Network,
     LogOut,
-    LayoutDashboard,
-    Menu,
-    X
+    LayoutGrid,
+    FolderKanban,
+    Activity,
+    Settings,
+    Layers,
+    User,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 import './Layout.css';
 
@@ -19,66 +23,64 @@ export default function Layout({ children }: LayoutProps) {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, logout } = useAuthStore();
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
     const handleLogout = () => {
         logout();
         navigate('/login');
     };
 
-    const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
+    const isActive = (path: string) => location.pathname === path;
+
+    // All sidebar menu items
+    const menuItems = [
+        { icon: LayoutGrid, label: 'Dashboard', path: '/dashboard' },
+        { icon: FolderKanban, label: 'Projects', path: '/projects' },
+        { icon: Rocket, label: 'Deployments', path: '/deployments' },
+        { icon: Layers, label: 'IaC Visualizer', path: '/iac' },
+        { icon: Activity, label: 'Logs', path: '/logs' },
+        { icon: Settings, label: 'Settings', path: '/settings' },
+    ];
 
     return (
-        <div className="layout">
-            {/* Mobile Header */}
-            <header className="mobile-header">
-                <Link to="/dashboard" className="logo">
-                    <Rocket className="logo-icon" />
-                    <span>DeployHub</span>
-                </Link>
-                <button
-                    className="mobile-menu-btn"
-                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    aria-label="Toggle menu"
-                >
-                    {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                </button>
-            </header>
-
+        <div className={`app-layout ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
             {/* Sidebar */}
-            <aside className={`sidebar ${mobileMenuOpen ? 'open' : ''}`}>
+            <aside className="app-sidebar">
                 <div className="sidebar-header">
-                    <Link to="/dashboard" className="logo" onClick={() => setMobileMenuOpen(false)}>
-                        <Rocket className="logo-icon" />
-                        <span>DeployHub</span>
+                    <Link to="/" className="sidebar-logo">
+                        <Rocket size={22} />
+                        {!sidebarCollapsed && <span>DeployHub</span>}
                     </Link>
+                    <button
+                        className="sidebar-toggle"
+                        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                        aria-label="Toggle sidebar"
+                    >
+                        {sidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                    </button>
                 </div>
 
                 <nav className="sidebar-nav">
-                    <Link
-                        to="/dashboard"
-                        className={`nav-item ${isActive('/dashboard') ? 'active' : ''}`}
-                        onClick={() => setMobileMenuOpen(false)}
-                    >
-                        <LayoutDashboard size={20} />
-                        <span>Dashboard</span>
-                    </Link>
-                    <Link
-                        to="/iac"
-                        className={`nav-item ${isActive('/iac') ? 'active' : ''}`}
-                        onClick={() => setMobileMenuOpen(false)}
-                    >
-                        <Network size={20} />
-                        <span>IaC Visualizer</span>
-                    </Link>
+                    {menuItems.map((item) => (
+                        <Link
+                            key={item.path}
+                            to={item.path}
+                            className={`nav-item ${isActive(item.path) ? 'active' : ''}`}
+                        >
+                            <item.icon size={20} />
+                            {!sidebarCollapsed && <span>{item.label}</span>}
+                        </Link>
+                    ))}
                 </nav>
 
                 <div className="sidebar-footer">
                     <div className="user-info">
                         <div className="user-avatar">
-                            {user?.email.charAt(0).toUpperCase()}
+                            <User size={16} />
                         </div>
-                        <span className="user-email">{user?.email}</span>
+                        {!sidebarCollapsed && (
+                            <span className="user-email">{user?.email?.split('@')[0] || 'User'}</span>
+                        )}
                     </div>
                     <button onClick={handleLogout} className="logout-btn" title="Logout">
                         <LogOut size={18} />
@@ -86,15 +88,8 @@ export default function Layout({ children }: LayoutProps) {
                 </div>
             </aside>
 
-            {/* Mobile Overlay */}
-            {mobileMenuOpen && (
-                <div
-                    className="mobile-overlay"
-                    onClick={() => setMobileMenuOpen(false)}
-                />
-            )}
-
-            <main className="main-content">
+            {/* Main Content */}
+            <main className="app-main">
                 {children}
             </main>
         </div>

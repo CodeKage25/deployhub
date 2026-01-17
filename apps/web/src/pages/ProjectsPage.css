@@ -1,0 +1,38 @@
+/* Projects Page - inherits from Dashboard.css */
+.projects-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+
+/* Search Bar */
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 0.625rem 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.search-bar svg {
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+}
+
+.search-bar input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--color-text);
+    font-size: 0.875rem;
+    outline: none;
+}
+
+.search-bar input::placeholder {
+    color: var(--color-text-muted);
+}
+
+/* Import shared styles from Dashboard.css */
