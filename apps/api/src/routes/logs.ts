@@ -42,7 +42,7 @@ export default async function logsRoutes(app: FastifyInstance) {
         logEmitter.on(`status:${deploymentId}`, statusHandler);
 
         // Handle client messages (e.g., ping)
-        connection.socket.on('message', (data) => {
+        connection.socket.on('message', (data: any) => {
             try {
                 const msg = JSON.parse(data.toString());
                 if (msg.type === 'ping') {
@@ -60,7 +60,7 @@ export default async function logsRoutes(app: FastifyInstance) {
             logEmitter.off(`status:${deploymentId}`, statusHandler);
         });
 
-        connection.socket.on('error', (err) => {
+        connection.socket.on('error', (err: any) => {
             app.log.error(`WebSocket error for deployment ${deploymentId}:`, err);
             logEmitter.off(`log:${deploymentId}`, logHandler);
             logEmitter.off(`status:${deploymentId}`, statusHandler);

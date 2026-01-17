@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid';
 import Docker from 'dockerode';
-import simpleGit from 'simple-git';
+import { simpleGit } from 'simple-git';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';

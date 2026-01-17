@@ -1,4 +1,4 @@
-import Fastify from 'fastify';
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { Mistral } from '@mistralai/mistralai';
 
 // Initialize Mistral client (uses MISTRAL_API_KEY env variable)
@@ -37,6 +37,22 @@ interface AnalysisResult {
     success: boolean;
     errors: BuildError[];
     summary: string;
+}
+
+// Request body types
+interface AnalyzeBody {
+    logs: string;
+    projectId?: string;
+}
+
+interface SuggestFixBody {
+    errorType: string;
+    errorMessage: string;
+}
+
+interface ChatBody {
+    message: string;
+    context?: Record<string, unknown>;
 }
 
 // Common error patterns and their fixes
@@ -140,7 +156,7 @@ function analyzeBuildLogs(logs: string): AnalysisResult {
 }
 
 // Chat with Mistral AI
-async function chatWithMistral(message: string, context?: any): Promise<string> {
+async function chatWithMistral(message: string, context?: Record<string, unknown>): Promise<string> {
     // If no API key, use fallback responses
     if (!process.env.MISTRAL_API_KEY) {
         return getFallbackResponse(message);
@@ -161,7 +177,19 @@ async function chatWithMistral(message: string, context?: any): Promise<string> 
             temperature: 0.7
         });
 
-        return response.choices?.[0]?.message?.content || getFallbackResponse(message);
+        // Extract content - handle both string and array responses
+        const content = response.choices?.[0]?.message?.content;
+        if (typeof content === 'string') {
+            return content;
+        }
+        if (Array.isArray(content) && content.length > 0) {
+            // If it's an array of content chunks, extract text
+            const textContent = content.find((c: { type?: string }) => c.type === 'text');
+            if (textContent && 'text' in textContent) {
+                return textContent.text as string;
+            }
+        }
+        return getFallbackResponse(message);
     } catch (error) {
         console.error('Mistral API error:', error);
         return getFallbackResponse(message);
@@ -200,9 +228,9 @@ function getFallbackResponse(message: string): string {
 }
 
 // Register routes
-export default async function aiRoutes(app: ReturnType<typeof Fastify>) {
+export default async function aiRoutes(app: FastifyInstance) {
     // Analyze build logs
-    app.post<{ Body: { logs: string; projectId?: string } }>('/analyze', async (request, reply) => {
+    app.post('/analyze', async (request: FastifyRequest<{ Body: AnalyzeBody }>, reply: FastifyReply) => {
         const { logs, projectId } = request.body;
 
         if (!logs) {
@@ -218,7 +246,7 @@ export default async function aiRoutes(app: ReturnType<typeof Fastify>) {
                     `Analyze this build error and suggest a fix:\n\n${result.errors[0].message}\n\nContext: ${logs.slice(0, 500)}`
                 );
                 return { projectId, ...result, aiSuggestion: aiAnalysis };
-            } catch (e) {
+            } catch {
                 // Continue with basic analysis
             }
         }
@@ -227,7 +255,7 @@ export default async function aiRoutes(app: ReturnType<typeof Fastify>) {
     });
 
     // Get suggested fixes
-    app.post<{ Body: { errorType: string; errorMessage: string } }>('/suggest-fix', async (request, reply) => {
+    app.post('/suggest-fix', async (request: FastifyRequest<{ Body: SuggestFixBody }>, reply: FastifyReply) => {
         const { errorType, errorMessage } = request.body;
 
         if (process.env.MISTRAL_API_KEY) {
@@ -245,6 +273,9 @@ export default async function aiRoutes(app: ReturnType<typeof Fastify>) {
             unknown: ['Review the full build logs', 'Search for the error message online']
         };
 
+        // Mark reply as used to avoid unused variable warning
+        void reply;
+
         return {
             errorType,
             errorMessage,
@@ -253,10 +284,13 @@ export default async function aiRoutes(app: ReturnType<typeof Fastify>) {
     });
 
     // Chat with AI
-    app.post<{ Body: { message: string; context?: any } }>('/chat', async (request, reply) => {
+    app.post('/chat', async (request: FastifyRequest<{ Body: ChatBody }>, reply: FastifyReply) => {
         const { message, context } = request.body;
 
         const response = await chatWithMistral(message, context);
+
+        // Mark reply as used to avoid unused variable warning
+        void reply;
 
         return { message, response, context };
     });
