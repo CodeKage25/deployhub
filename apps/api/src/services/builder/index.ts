@@ -43,9 +43,10 @@ const buildpacks: Buildpack[] = [
         dockerfile: (envVars) => `FROM node:20-alpine
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 COPY . .
 RUN npm run build --if-present
+RUN npm prune --production
 EXPOSE ${envVars.PORT || 3000}
 CMD ["npm", "start"]
 `,

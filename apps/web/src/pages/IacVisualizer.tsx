@@ -258,9 +258,9 @@ function UploadModal({
         setLoading(true);
 
         try {
-            const result = await iac.parseDiagram({
+            const result = await iac.parse({
                 name,
-                source_type: sourceType,
+                sourceType,
                 content,
             });
             onUploaded(result);
